@@ -122,7 +122,7 @@ for (i in 1:dim(countmat)[2]) {
 	    all_exons = CallCNVs(x = all_exons, transition.probability=10^-4,
 	        chromosome=countdf$space, start=countdf$start,
 	        end=countdf$end, name=countdf$names)
-	    write.table(all_exons@CNV.calls, file=paste(sample_name,".txt",sep=''), 
+	    write.table(all_exons@CNV.calls, file=paste(sample_name,".ED.cnv",sep=''), 
 	        sep='\t', row.names=FALSE, col.names=TRUE, quote=FALSE)
 	    if (opt$verbose) {
 	        cat(paste("Wrote CNV calls for ",sample_name,"\n",sep=''),file=stdout())
