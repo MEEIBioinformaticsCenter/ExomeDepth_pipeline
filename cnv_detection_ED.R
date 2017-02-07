@@ -76,10 +76,6 @@ if (file.exists(opt$outdir)) {
     stop()
 }
 
-if (opt$verbose) {
-    cat(paste("Read BAM list from ",opt$bamlist,"\n",sep=''),file=stdout())
-}
-
 countsTarget = getBamCounts(bed.frame = exons.hg19, bam.files = bams)
 
 
