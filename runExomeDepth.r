@@ -20,6 +20,8 @@ option_list = list(
               type='character', help="Path to list of BAMs"),
   make_option(c("-o", "--outdir"), action="store", default='./',
               type='character', help="Output directory [default %default]"),
+  make_option(c("-c", "--chr"), action="store_true", default=FALSE, 
+              help="Bams with CHR tex on chromosomes [default %default]"),
   make_option(c("-v", "--verbose"), action="store_true", default=FALSE,
               help="Print verbose output [default %default]"),
   make_option(c("-q", "--quiet"), action="store_false", dest="verbose",
@@ -33,8 +35,27 @@ print(opt,file=stderr())
 # to avoid writing a tryCatch I use file.exists, and set default to '', which is
 # a file that never exists.
 if (file.exists(opt$bamlist)) {
-    # read bam list directly into a vector (note use of $V1)
-    bams = read.table(opt$bamlist,header=FALSE)$V1
+	# read bam list directly into a vector (note use of $V1)
+	bams = read.table(opt$bamlist,header=FALSE)$V1
+
+	bamindexes = bams
+	for (i in 1:length(bamindexes)) {
+		stardotbai = gsub(".bam$",".bai",bams[i])
+		stardotbamdotbai = gsub(".bam$",".bam.bai",bams[i])
+		if (file.exists(stardotbai)) {
+			bamindexes[i] = stardotbai
+		} else if (file.exists(stardotbamdotbai)) {
+			bamindexes[i] = stardotbamdotbai
+		}
+		else {
+			cat(paste("Cannot find a .bai index for BAM: ",bams[i],"\n",sep=""),file=stderr())
+			cat("stopping execution....",file=stderr())
+			stop()
+		}
+	}
+
+
+
 } else {
     cat("You need to specify a valid BAM list using -b.\n",file=stderr())
     cat(paste("The filename you specified was '",opt$bamlist,"'.",sep=''),file=stderr())
@@ -57,7 +78,8 @@ if (opt$verbose) {
     cat(paste("Read BAM list from ",opt$bamlist,"\n",sep=''),file=stdout())
 }
 
-counts = getBamCounts(bed.frame = exons.hg19, bam.files = bams)
+
+counts = getBamCounts(bed.frame = exons.hg19, bam.files = bams, index.files = bamindexes, include.chr = opt$chr)
 
 if (opt$verbose) {
     cat(paste("Calculated counts\n",sep=''),file=stdout())
