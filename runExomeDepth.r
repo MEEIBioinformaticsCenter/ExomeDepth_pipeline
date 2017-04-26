@@ -107,25 +107,29 @@ countmat = as.matrix(countdf[,6:dim(countdf)[2]]) # remove cols 1-5 metadata
 
 # beta version: assume you want CNVs on all samples
 for (i in 1:dim(countmat)[2]) {
-    sample_name = colnames(countmat)[i]
-    reference_list = select.reference.set(test.counts = countmat[,i], 
-        reference.count = countmat[,-i],
-        bin.length=(countdf$end-countdf$start)/1000,
-        n.bins.reduced = 10000)
-    reference_set = apply(
-        X = as.matrix(countdf[, reference_list$reference.choice]), 
-        MAR=1, FUN=sum)
-    all_exons = new('ExomeDepth', test=countmat[,i], 
-        reference=reference_set,
-        formula = 'cbind(test,reference) ~ 1')
-    all_exons = CallCNVs(x = all_exons, transition.probability=10^-4,
-        chromosome=countdf$space, start=countdf$start,
-        end=countdf$end, name=countdf$names)
-    write.table(all_exons@CNV.calls, file=paste(sample_name,".txt",sep=''), 
-        sep='\t', row.names=FALSE, col.names=TRUE, quote=FALSE)
-    if (opt$verbose) {
-        cat(paste("Wrote CNV calls for ",sample_name,"\n",sep=''),file=stdout())
-    }
+	data<-tryCatch({
+	    sample_name = colnames(countmat)[i]
+	    reference_list = select.reference.set(test.counts = countmat[,i], 
+	        reference.count = countmat[,-i],
+	        bin.length=(countdf$end-countdf$start)/1000,
+	        n.bins.reduced = 10000)
+	    reference_set = apply(
+	        X = as.matrix(countdf[, reference_list$reference.choice]), 
+	        MAR=1, FUN=sum)
+	    all_exons = new('ExomeDepth', test=countmat[,i], 
+	        reference=reference_set,
+	        formula = 'cbind(test,reference) ~ 1')
+	    all_exons = CallCNVs(x = all_exons, transition.probability=10^-4,
+	        chromosome=countdf$space, start=countdf$start,
+	        end=countdf$end, name=countdf$names)
+	    write.table(all_exons@CNV.calls, file=paste(sample_name,".txt",sep=''), 
+	        sep='\t', row.names=FALSE, col.names=TRUE, quote=FALSE)
+	    if (opt$verbose) {
+	        cat(paste("Wrote CNV calls for ",sample_name,"\n",sep=''),file=stdout())
+	    }
+	}, error = function(err) {
+		cat(paste("ERROR in ED, skipping sample: ",sample_name,"\n",sep=''),file=stdout())
+	})
 }
 
 duration = format(Sys.time() - start_time)
